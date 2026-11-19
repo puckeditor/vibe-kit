@@ -1,0 +1,51 @@
+{
+  "name": "@puckeditor/vibe-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Let people build apps from your components and APIs with Puck AI, within the rules you set",
+  "author": "Chris Villa <chris@puckeditor.com>",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./client": "./client.ts",
+    "./server": "./server.ts",
+    "./builder": "./builder.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@puckeditor/ai-types": "^0.10.0",
+    "@puckeditor/cloud-client": "^0.10.0",
+    "@puckeditor/core": "^0.24.1",
+    "@puckeditor/plugin-ai": "^0.10.0",
+    "@puckeditor/plugin-auth": "^0.10.0",
+    "@puckeditor/plugin-pages": "^0.10.0",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "jsdom": "^28.1.0",
+    "prettier": "^3.6.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.12",
+    "zod": "^4.6.7"
+  },
+  "peerDependencies": {
+    "@puckeditor/ai-types": "^0.10.0",
+    "@puckeditor/cloud-client": "^0.10.0",
+    "@puckeditor/core": "^0.24.1",
+    "@puckeditor/plugin-ai": "^0.10.0",
+    "@puckeditor/plugin-auth": "^0.10.0",
+    "@puckeditor/plugin-pages": "^0.10.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "zod": "^4"
+  },
+  "packageManager": "pnpm@11.20.0"
+}

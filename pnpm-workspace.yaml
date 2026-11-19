@@ -1,0 +1,3 @@
+# Puck packages publish canaries often; let installs take them straight away.
+minimumReleaseAgeExclude:
+  - "@puckeditor/*"
