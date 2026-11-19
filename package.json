@@ -40,7 +40,7 @@
   "peerDependencies": {
     "@puckeditor/ai-types": "^0.10.0",
     "@puckeditor/cloud-client": "^0.10.0",
-    "@puckeditor/core": "^0.24.1",
+    "@puckeditor/core": "^0.24.1-0",
     "@puckeditor/plugin-ai": "^0.10.0",
     "@puckeditor/plugin-auth": "^0.10.0",
     "@puckeditor/plugin-pages": "^0.10.0",
