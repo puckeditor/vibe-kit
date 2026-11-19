@@ -16,7 +16,7 @@ export type WriteOutcome<T> = {
   cancelled?: boolean;
 };
 
-/** Calls a kit's APIs, for the hooks and `window.vibeKit` alike. */
+/** Calls a kit's APIs, behind `window.vibeKit`. */
 export type VibeKitClient = {
   /** Read once per name and input until a write changes data. */
   read: (name: string, input?: unknown) => Promise<ApiResponseBody>;

@@ -252,6 +252,25 @@ describe("other routes", () => {
     expect(options.ai.context).toBe("Mine");
   });
 
+  it("keep apps designed, with scripts, whatever the puck options say", async () => {
+    await createVibeKitHandler(kit, {
+      reads,
+      writes,
+      puck: {
+        ai: { mode: "assembly", designMode: { scripts: false } },
+      },
+    })(post("/api/puck/chat"));
+
+    const [, options] = puckHandler.mock.calls[0] as unknown as [
+      Request,
+      Record<string, any>,
+    ];
+
+    expect(options.ai.mode).toBe("design");
+    expect(options.ai.designMode.scripts).toBe(true);
+    expect(options.ai.designMode.instructions).toContain("## Data in scripts");
+  });
+
   it("give the AI a tool per read when the rules allow reading data", async () => {
     const readingKit = defineVibeKit({ ...kit, ai: { readData: true } });
 

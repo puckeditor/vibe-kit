@@ -3,10 +3,8 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useLayoutEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from "react";
 import type { VibeKit } from "../types";
@@ -18,19 +16,17 @@ type VibeKitContextValue = {
   client: VibeKitClient;
   /** What scripts get as `window.vibeKit`. */
   bridge: VibeKitBridge;
-  /** Goes up after every write that changes data, so reads fetch again. */
-  version: number;
 };
 
 const VibeKitContext = createContext<VibeKitContextValue | null>(null);
 
 /**
- * Give components access to the kit's APIs, for `useRead` and `useWrite`, and
- * scripts as `window.vibeKit`.
+ * Give the scripts of the components the AI designs the kit's APIs, as
+ * `window.vibeKit`.
  *
- * Wrap both the editor and the rendered app in it. In the editor, set `dryRun`
- * so writes only check their input, and add `createVibeKitPlugin()` so scripts
- * in the preview get `vibeKit` too.
+ * `AppBuilder` and `AppView` already use it. Use it yourself only to build your
+ * own editor: set `dryRun` so writes only check their input, and add
+ * `createVibeKitPlugin()` so scripts in the editor's preview get `vibeKit` too.
  *
  * @param props.kit The kit, from `defineVibeKit`.
  * @param props.host Where `createVibeKitHandler` serves the APIs. Defaults to `/api/puck`.
@@ -54,20 +50,11 @@ export function VibeKitProvider({
     [kit, host, dryRun],
   );
   const bridge = useMemo(() => createBridge(client), [client]);
-  const [version, setVersion] = useState(0);
-
-  useEffect(
-    () => client.subscribe(() => setVersion((current) => current + 1)),
-    [client],
-  );
 
   // A layout effect, so the bridge is there before scripts run in effects
   useLayoutEffect(() => installBridge(window, bridge), [bridge]);
 
-  const value = useMemo(
-    () => ({ kit, client, bridge, version }),
-    [kit, client, bridge, version],
-  );
+  const value = useMemo(() => ({ kit, client, bridge }), [kit, client, bridge]);
 
   return (
     <VibeKitContext.Provider value={value}>{children}</VibeKitContext.Provider>
@@ -78,7 +65,7 @@ export function VibeKitProvider({
  * Get the kit and its client from the nearest `VibeKitProvider`.
  *
  * @returns The provider's value.
- * @throws Error outside an `VibeKitProvider`.
+ * @throws Error outside a `VibeKitProvider`.
  */
 export const useVibeKit = () => {
   const value = useContext(VibeKitContext);

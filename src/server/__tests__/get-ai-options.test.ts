@@ -12,20 +12,23 @@ import { kit } from "../../__tests__/helpers";
 const callRead = vi.fn();
 
 describe("getAiOptions", () => {
-  it("tells design mode how scripts call the APIs when the rules allow scripts", () => {
-    const scripted = defineVibeKit({
+  it("forces design mode, with scripts, for every request", () => {
+    const options = getAiOptions(kit, { description: "", callRead });
+
+    expect(options.mode).toBe("design");
+    expect(options.designMode?.scripts).toBe(true);
+  });
+
+  it("puts the design rules before how scripts call the APIs", () => {
+    const designed = defineVibeKit({
       ...kit,
-      ai: {
-        designMode: { allowed: true, scripts: true, instructions: "Be bold." },
-      },
+      ai: { designRules: "Be bold." },
     });
-    const { designMode } = getAiOptions(scripted, {
+    const { designMode } = getAiOptions(designed, {
       description: "",
       callRead,
     });
 
-    expect(designMode?.allowed).toBe(true);
-    expect(designMode?.scripts).toBe(true);
     expect(designMode?.instructions).toMatch(
       /^Be bold\.\n\n## Data in scripts/,
     );
@@ -34,15 +37,24 @@ describe("getAiOptions", () => {
     );
   });
 
-  it("leaves design mode alone without scripts", () => {
-    const designed = defineVibeKit({
-      ...kit,
-      ai: { designMode: { allowed: true, instructions: "Be bold." } },
-    });
-
+  it("adds the kit's APIs to the context", () => {
     expect(
-      getAiOptions(designed, { description: "", callRead }).designMode,
-    ).toEqual({ allowed: true, instructions: "Be bold." });
+      getAiOptions(kit, { description: "## Data APIs", callRead }).context,
+    ).toBe("We are Acme.\n\n## Data APIs");
+  });
+
+  it("passes the model through, without the kit-only rules", () => {
+    const options = getAiOptions(
+      defineVibeKit({
+        ...kit,
+        ai: { model: "openai/gpt-4.1", designRules: "Be bold." },
+      }),
+      { description: "", callRead },
+    );
+
+    expect(options.model).toBe("openai/gpt-4.1");
+    expect(options).not.toHaveProperty("designRules");
+    expect(options).not.toHaveProperty("tools");
   });
 
   it("lets the AI leave out optional inputs of a read tool with null", () => {
@@ -66,21 +78,12 @@ describe("getAiOptions", () => {
     ).toBe(true);
   });
 
-  it("tells design mode not to copy data the read tools return", () => {
-    const reading = defineVibeKit({
-      ...kit,
-      ai: { readData: true, designMode: { allowed: true, scripts: true } },
-    });
+  it("tells the AI not to copy data the read tools return", () => {
+    const reading = defineVibeKit({ ...kit, ai: { readData: true } });
 
     expect(
       getAiOptions(reading, { description: "", callRead }).designMode
         ?.instructions,
     ).toContain("never copy data into markup or scripts");
-  });
-
-  it("leaves out design mode when the rules don't set it", () => {
-    expect(getAiOptions(kit, { description: "", callRead })).not.toHaveProperty(
-      "designMode",
-    );
   });
 });

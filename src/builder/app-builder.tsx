@@ -1,10 +1,12 @@
 "use client";
 
+import "@puckeditor/core/puck.css";
 import { useMemo } from "react";
-import { Puck, fieldsPlugin, type Config } from "@puckeditor/core";
+import { Puck, fieldsPlugin } from "@puckeditor/core";
 import { createAiPlugin, withDynamicConfig } from "@puckeditor/plugin-ai";
 import { createAuthPlugin } from "@puckeditor/plugin-auth";
 import { createPagesPlugin } from "@puckeditor/plugin-pages";
+import { createAppConfig, type AppFrame } from "../client/app-config";
 import { createVibeKitPlugin } from "../client/create-vibe-kit-plugin";
 import { VibeKitProvider } from "../client/provider";
 import type { VibeKit } from "../types";
@@ -15,53 +17,49 @@ import {
 import { sendPrompt } from "./send-prompt";
 
 /**
- * Show the editor where people build an app: Puck AI's chat and the fields
- * in the plugin bar, and the live app filling the rest.
+ * Show the editor where people build an app by describing it: the AI chat on
+ * the left, and the live app filling the rest.
  *
- * The chat stays in design mode when the kit's rules allow it, as apps have
- * no fixed components, and the app starts interactive, so it works as it
- * will once published. Writes only check their input here, so trying an
- * app's actions while building it changes nothing.
+ * The AI designs every component, to the kit's design rules, and the app
+ * works as it will once published. Writes only check their input here, so
+ * trying an app's actions while building it changes nothing.
  *
- * Needs `createVibeKitHandler` serving Puck's routes, for the AI, pages and
- * Sign in with Puck.
+ * Needs `createVibeKitHandler` serving `/api/puck`, for the AI, saving and
+ * publishing apps, and signing in.
  *
  * @param props.kit The kit, from `defineVibeKit`.
- * @param props.config The app frame: a root, and the components apps may use.
- * @param props.examplePrompts Prompts the chat suggests.
- * @param props.initialPrompt A prompt to send once the app loads.
- * @param props.siteUrl Where published apps run, for "View page". Defaults to `/apps`.
+ * @param props.frame Your layout around every app. Defaults to none.
+ * @param props.examplePrompts Prompts the chat suggests, such as "Add a table of open orders".
+ * @param props.initialPrompt A prompt to send once the app loads, such as the
+ *   one it was created with.
+ * @param props.siteUrl Where published apps run, for the editor's "View page"
+ *   link. Defaults to `/apps`.
  * @returns The editor.
  */
 export function AppBuilder({
   kit,
-  config,
+  frame,
   examplePrompts = [],
   initialPrompt,
   siteUrl = "/apps",
 }: {
   kit: VibeKit;
-  config: Config;
+  frame?: AppFrame;
   examplePrompts?: string[];
   initialPrompt?: InitialPrompt;
   siteUrl?: string;
 }) {
-  const designMode = !!kit.ai.designMode?.allowed;
-
-  // Design mode adds the components the AI designs to the config as it goes.
-  const editorConfig = useMemo(
-    () =>
-      designMode
-        ? withDynamicConfig(config, { root: {}, content: [] })
-        : config,
-    [config, designMode],
+  // The AI adds the components it designs to the config as it goes
+  const config = useMemo(
+    () => withDynamicConfig(createAppConfig(frame), { root: {}, content: [] }),
+    [frame],
   );
 
   const plugins = useMemo(
     () => [
-      // No design mode toggle: the chat stays in the mode it starts in
+      // Design mode, without a toggle: there are no components to assemble
       createAiPlugin({
-        defaultMode: designMode ? "design" : "assembly",
+        defaultMode: "design",
         chat: {
           examplePrompts: examplePrompts.map((label) => ({
             label,
@@ -69,7 +67,7 @@ export function AppBuilder({
           })),
         },
       }),
-      // In the plugin bar, rather than a sidebar beside the app
+      // The app's name, in the plugin bar beside the chat
       fieldsPlugin({ desktopSideBar: "left" }),
       createPagesPlugin({ siteUrl }),
       createAuthPlugin(),
@@ -77,13 +75,13 @@ export function AppBuilder({
       createVibeKitPlugin(),
       ...(initialPrompt ? [createInitialPromptPlugin(initialPrompt)] : []),
     ],
-    [designMode, examplePrompts, initialPrompt, siteUrl],
+    [examplePrompts, initialPrompt, siteUrl],
   );
 
   return (
     <VibeKitProvider kit={kit} dryRun>
       <Puck
-        config={editorConfig}
+        config={config}
         data={{}}
         plugins={plugins}
         ui={{ plugin: { current: "ai" }, previewMode: "interactive" }}

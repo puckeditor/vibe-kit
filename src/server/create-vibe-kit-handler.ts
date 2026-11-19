@@ -46,8 +46,10 @@ export type VibeKitHandlerOptions<Kit extends VibeKit, Context> = {
    */
   context?: (request: Request) => Context | null | Promise<Context | null>;
   /**
-   * Options for `puckHandler`, which serves the other routes. Defaults `auth`
-   * to Sign in with Puck. `ai` overrides the options the kit's rules make.
+   * Options for `puckHandler`, which serves the other routes: the AI, saving
+   * apps and signing in. Defaults `auth` to Sign in with Puck. `ai` overrides
+   * the options the kit's rules make, except that apps are always designed,
+   * with scripts.
    */
   puck?: PuckCloudOptions;
 };
@@ -70,8 +72,8 @@ const own = <T>(record: Record<string, T>, key: string) =>
  * Serves `POST /api/puck/reads/:name` and `POST /api/puck/writes/:name`, which
  * check who's calling and the input, run your handler, then check its output.
  * A write with `dryRun: true` only checks the input. They refuse requests
- * without the header the kit's client sends, so scripts use `vibeKit`. Every other route goes to
- * `puckHandler`, with AI options made from the kit's rules.
+ * without the header the kit's client sends, so scripts use `vibeKit`. Every
+ * other route goes to `puckHandler`, with AI options made from the kit's rules.
  *
  * @param kit The kit, from `defineVibeKit`.
  * @param options.reads Your handler for each read API.
@@ -208,7 +210,13 @@ export const createVibeKitHandler = <
     return puckHandler(request, {
       auth: { provider: "puck" },
       ...puck,
-      ai: { ...ai, ...puck.ai },
+      // Always design mode with scripts, as scripts are how apps reach data
+      ai: {
+        ...ai,
+        ...puck.ai,
+        mode: "design",
+        designMode: { ...ai.designMode, ...puck.ai?.designMode, scripts: true },
+      },
     });
   };
 };

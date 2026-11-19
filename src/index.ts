@@ -12,21 +12,6 @@ export type {
   WriteResult,
 } from "./types";
 
-export {
-  describeFields,
-  getReadShape,
-  humanize,
-  type FieldDescriptor,
-  type ReadShape,
-} from "./lib/describe-schema";
+export { humanize } from "./lib/describe-schema";
 
 export { describeKit } from "./lib/describe-kit";
-
-export {
-  inputField,
-  keyField,
-  pickReadInput,
-  readField,
-  writeField,
-  type InputValue,
-} from "./fields";

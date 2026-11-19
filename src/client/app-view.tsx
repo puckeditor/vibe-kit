@@ -1,33 +1,42 @@
 "use client";
 
 import { useMemo } from "react";
-import { Render, type Config, type Data } from "@puckeditor/core";
+import { Render, type Data } from "@puckeditor/core";
+import { withDynamicConfig } from "@puckeditor/plugin-ai";
 import type { VibeKit } from "../types";
-import { applyRules } from "./apply-rules";
+import { createAppConfig, type AppFrame } from "./app-config";
 import { VibeKitProvider } from "./provider";
 
 /**
- * Run a published app, under the kit's rules.
+ * Run a published app: the components the AI designed, in your frame, with
+ * `window.vibeKit` so their scripts can call the kit's APIs.
  *
  * @param props.kit The kit, from `defineVibeKit`.
- * @param props.config The app frame: a root, and the components apps may use.
- * @param props.data The app's published page.
+ * @param props.data The app, as Puck Cloud's pages API returns it.
+ * @param props.frame Your layout around every app. Defaults to none.
+ * @param props.host Where `createVibeKitHandler` serves the APIs. Defaults to `/api/puck`.
  * @returns The app.
  */
 export function AppView({
   kit,
-  config,
   data,
+  frame,
+  host,
 }: {
   kit: VibeKit;
-  config: Config;
   data: Data;
+  frame?: AppFrame;
+  host?: string;
 }) {
-  const app = useMemo(() => applyRules(kit, config, data), [kit, config, data]);
+  // The AI's components live in the app's data, not in your config
+  const config = useMemo(
+    () => withDynamicConfig(createAppConfig(frame), data),
+    [frame, data],
+  );
 
   return (
-    <VibeKitProvider kit={kit}>
-      <Render config={app.config} data={app.data} />
+    <VibeKitProvider kit={kit} host={host}>
+      <Render config={config} data={data} />
     </VibeKitProvider>
   );
 }

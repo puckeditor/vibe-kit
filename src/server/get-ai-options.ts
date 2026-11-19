@@ -2,7 +2,7 @@ import { tool, type PuckCloudOptions } from "@puckeditor/cloud-client";
 import { z } from "zod/v4";
 import type { VibeKit } from "../types";
 import { describeFields } from "../lib/describe-schema";
-import { allowsScripts, describeBridge } from "../lib/describe-bridge";
+import { describeBridge } from "../lib/describe-bridge";
 
 export type PuckAiOptions = NonNullable<PuckCloudOptions["ai"]>;
 
@@ -54,9 +54,10 @@ const toToolInput = (input?: z.ZodObject) => {
 /**
  * Turn a kit's AI rules into `puckHandler` AI options.
  *
- * Appends the kit's APIs to the context, tells design mode how scripts call
- * them when the rules allow scripts, and adds a tool per read API when the
- * rules allow `readData`.
+ * Forces design mode for every request, as apps have no components of their
+ * own, and lets designed components run scripts, as scripts are how apps
+ * reach data. Appends the kit's APIs to the context and the design rules, and
+ * adds a tool per read API when the rules allow `readData`.
  *
  * @param kit The kit.
  * @param params.description The kit's APIs, as `describeKit` describes them.
@@ -74,21 +75,18 @@ export const getAiOptions = (
     callRead: (name: string, input: unknown) => Promise<unknown>;
   },
 ): PuckAiOptions => {
-  const { context, readData, designMode, ...rules } = kit.ai;
+  const { context, designRules, readData, ...rules } = kit.ai;
 
   return {
     ...rules,
+    mode: "design",
     context: [context, description].filter(Boolean).join("\n\n"),
-    ...(designMode && {
-      designMode: allowsScripts(kit)
-        ? {
-            ...designMode,
-            instructions: [designMode.instructions, describeBridge(kit)]
-              .filter(Boolean)
-              .join("\n\n"),
-          }
-        : designMode,
-    }),
+    designMode: {
+      scripts: true,
+      instructions: [designRules, describeBridge(kit)]
+        .filter(Boolean)
+        .join("\n\n"),
+    },
     ...(readData && {
       tools: Object.fromEntries(
         Object.entries(kit.reads).map(([name, api]) => [

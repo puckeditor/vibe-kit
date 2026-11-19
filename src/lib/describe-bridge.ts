@@ -1,15 +1,6 @@
 import type { VibeKit } from "../types";
 
 /**
- * Check whether a kit's rules let designed components run scripts.
- *
- * @param kit The kit.
- * @returns Whether design mode and its scripts are both allowed.
- */
-export const allowsScripts = (kit: VibeKit) =>
-  !!kit.ai.designMode?.allowed && !!kit.ai.designMode.scripts;
-
-/**
  * Describe `window.vibeKit` for the AI's design-mode instructions.
  *
  * @param kit The kit, for an example read.
@@ -32,7 +23,7 @@ export const describeBridge = (kit: VibeKit) => {
           "You can call the read APIs as tools to see real data while you design. Use it to shape the design, but never copy data into markup or scripts: read it with `vibeKit` when the app runs, so it stays current.",
         ]
       : []),
-    "Prefer the data components. Write a script with `vibeKit` only for what they can't do, such as boards, live search or custom charts.",
+    "Every component that shows or changes data needs a script. Load data when the component connects, show a loading state until it arrives, and show the reason when a call fails.",
     [
       "```js",
       "class ExampleData extends HTMLElement {",

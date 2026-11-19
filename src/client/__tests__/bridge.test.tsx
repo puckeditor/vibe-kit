@@ -1,10 +1,9 @@
 // @vitest-environment jsdom
-import { render, renderHook, waitFor } from "@testing-library/react";
-import type { ReactElement, ReactNode } from "react";
+import { render } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { VibeKitProvider } from "../provider";
 import { createVibeKitPlugin } from "../create-vibe-kit-plugin";
-import { useRead } from "../use-read";
 import { VIBE_KIT_HEADER } from "../../lib/constants";
 import { kit } from "../../__tests__/helpers";
 
@@ -12,15 +11,6 @@ const fetchMock = vi.fn();
 
 const json = (body: unknown, status = 200) =>
   Promise.resolve(new Response(JSON.stringify(body), { status }));
-
-const wrapper = (dryRun = false) =>
-  function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <VibeKitProvider kit={kit} dryRun={dryRun}>
-        {children}
-      </VibeKitProvider>
-    );
-  };
 
 /**
  * Render a provider, so `window.vibeKit` is installed.
@@ -62,17 +52,14 @@ describe("window.vibeKit", () => {
     expect(window.vibeKit).toBeUndefined();
   });
 
-  it("reads with the kit's header, sharing requests with useRead", async () => {
-    const { result } = renderHook(
-      () => useRead("listTickets", { status: "open" }),
-      { wrapper: wrapper() },
-    );
-
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+  it("reads with the kit's header, once per input until data changes", async () => {
+    const vibeKit = mountBridge();
 
     await expect(
-      window.vibeKit!.read("listTickets", { status: "open" }),
+      vibeKit.read("listTickets", { status: "open" }),
     ).resolves.toEqual([{ id: "t1" }]);
+    await vibeKit.read("listTickets", { status: "open" });
+
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
       [VIBE_KIT_HEADER]: "1",

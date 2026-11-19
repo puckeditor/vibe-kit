@@ -8,7 +8,7 @@ describe("describeKit", () => {
     expect(describeKit(kit)).toBe(
       [
         "## Data APIs",
-        "Apps read and change data only through these APIs. Bind components to them by name. Never invent APIs, fields or data.",
+        "Apps read and change data only through these APIs, from components' scripts with `vibeKit`. Never invent APIs, fields or data.",
         "### Read APIs",
         [
           "- `listTickets` (List tickets): Support tickets.",
@@ -27,14 +27,9 @@ describe("describeKit", () => {
     );
   });
 
-  it("mentions vibeKit when the rules allow scripts", () => {
-    const scripted = defineVibeKit({
-      ...kit,
-      ai: { designMode: { allowed: true, scripts: true } },
-    });
-
-    expect(describeKit(scripted)).toContain(
-      "or call them from designed components' scripts with `vibeKit`",
+  it("tells the AI to call the APIs from scripts with vibeKit", () => {
+    expect(describeKit(kit)).toContain(
+      "from components' scripts with `vibeKit`",
     );
   });
 

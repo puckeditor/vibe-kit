@@ -1,5 +1,4 @@
 import type { VibeKit, ReadApi, WriteApi } from "../types";
-import { allowsScripts } from "./describe-bridge";
 import {
   describeFields,
   describeFieldType,
@@ -91,9 +90,7 @@ export const describeKit = (kit: VibeKit) => {
 
   return [
     "## Data APIs",
-    allowsScripts(kit)
-      ? "Apps read and change data only through these APIs: bind components to them by name, or call them from designed components' scripts with `vibeKit`. Never invent APIs, fields or data."
-      : "Apps read and change data only through these APIs. Bind components to them by name. Never invent APIs, fields or data.",
+    "Apps read and change data only through these APIs, from components' scripts with `vibeKit`. Never invent APIs, fields or data.",
     "### Read APIs",
     reads.length
       ? reads.map(([name, api]) => describeRead(name, api)).join("\n")

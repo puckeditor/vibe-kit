@@ -1,11 +1,14 @@
-import type { PuckCloudOptions } from "@puckeditor/cloud-client";
+import type {
+  PuckAiModel,
+  PuckAiProviderOptions,
+} from "@puckeditor/cloud-client";
 import type { z } from "zod/v4";
 
 /** An API apps read data from, such as a list of orders. */
 export type ReadApi = {
-  /** What the API returns, for the AI and the editor. */
+  /** What the API returns, so the AI knows when to use it. */
   description: string;
-  /** The API's name in the editor. Defaults to its key, in sentence case. */
+  /** A readable name, such as "Orders". Defaults to its key, in sentence case. */
   label?: string;
   /** What apps may send, such as filters. Defaults to no input. */
   input?: z.ZodObject;
@@ -15,9 +18,9 @@ export type ReadApi = {
 
 /** An API apps change data with, such as closing a ticket. */
 export type WriteApi = {
-  /** What the API does, for the AI and the editor. */
+  /** What the API does, so the AI knows when to use it. */
   description: string;
-  /** The API's name in the editor. Defaults to its key, in sentence case. */
+  /** A readable name, such as "Refund order". Defaults to its key, in sentence case. */
   label?: string;
   /** What apps must send. The server checks it before your handler runs. */
   input: z.ZodObject;
@@ -27,21 +30,30 @@ export type WriteApi = {
   confirm?: string;
 };
 
-type PuckAiOptions = NonNullable<PuckCloudOptions["ai"]>;
-
-/**
- * How the AI may build apps. Takes the `puckHandler` AI options that set
- * policy, such as `designMode.allowed` and `designMode.scripts`.
- */
-export type AiRules = Pick<
-  PuckAiOptions,
-  "context" | "designMode" | "maxIterations" | "model" | "providerOptions"
-> & {
+/** How the AI builds apps. */
+export type AiRules = {
   /**
-   * Let the AI call read APIs while it builds, so it sees real data. Defaults
-   * to false, so the AI only sees what the APIs return, not the data.
+   * What the AI should know about your business and the people using the
+   * apps, such as who they are and what matters to them.
+   */
+  context?: string;
+  /**
+   * How every component the AI designs must look and behave: your design
+   * system, in words. Name the CSS variables your app frame sets, and give
+   * sizes, colours and parts, such as buttons and tables.
+   */
+  designRules?: string;
+  /**
+   * Let the AI call your read APIs while it builds, so it designs around real
+   * data. Defaults to false, so the AI only sees what the APIs return.
    */
   readData?: boolean;
+  /** The AI model, such as "openai/gpt-5.6-luna". Defaults to Puck's. */
+  model?: PuckAiModel;
+  /** How many steps the AI may take for each prompt. Capped at 50. */
+  maxIterations?: number;
+  /** Options for the model's provider, such as how hard it reasons. */
+  providerOptions?: PuckAiProviderOptions;
 };
 
 /** What apps may be built from: the APIs they read and write, and the AI's rules. */
